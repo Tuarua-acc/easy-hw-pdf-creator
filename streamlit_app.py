@@ -2,10 +2,11 @@ import streamlit as st
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter, A4, A3
 from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 from reportlab.lib.pagesizes import A4, A3
 from PyPDF2 import PdfWriter, PdfReader
 import io
-from io import StringIO
+from io import StringIO, BytesIO
 from PIL import Image
 import pandas as pd
 
@@ -19,48 +20,7 @@ for image in images:
     st.sidebar.write(f"Question {images.index(image)+1}:", image.name)
     st.sidebar.image(image)
 
-def add_image_to_first_page(pdf_path, image_path, output_path, page_size=A3, max_height_px=12000):
-    # Open the image to get its size and calculate the aspect ratio
-    with Image.open(image_path) as img:
-        img_width, img_height = img.size
-        aspect_ratio = img_height / img_width
-
-    # Convert the max height from pixels to points (1 point = 1/72 inch)
-    max_height_pt = max_height_px * (1 / 72)
-
-    # Calculate the new width based on the max height and aspect ratio
-    new_width_pt = max_height_pt / aspect_ratio
-
-    # Create a PDF for the image
-    packet = io.BytesIO()
-    c = canvas.Canvas(packet, pagesize=page_size)
-
-    # Calculate the position to place the image at the top center
-    x_position = (page_size[0] - new_width_pt) / 2
-    y_position = page_size[1] - max_height_pt
-
-    # Draw the image on the canvas at the calculated position and size
-    c.drawImage(image_path, x_position, y_position, width=new_width_pt, height=max_height_pt, preserveAspectRatio=True, mask='auto')
-    c.save()
-
-    # Move the buffer position to the beginning
-    packet.seek(0)
-    new_pdf = PdfReader(packet)
-    existing_pdf = PdfReader(open(pdf_path, "rb"))
-    output = PdfWriter()
-
-    # Add the image PDF as a watermark to the first page
-    page = existing_pdf.pages[0]
-    page.merge_page(new_pdf.pages[0])
-    output.add_page(page)
-
-    # Add the rest of the pages from the existing PDF
-    for i in range(1, len(existing_pdf.pages)):
-        output.add_page(existing_pdf.pages[i])
-
-    # Write the modified content to the output file
-    with open(output_path, "wb") as outputStream:
-        output.write(outputStream)
+# def add_image_to_first_page(pdf_path, image_path, output_path, page_size=A3, max_height_px=12000):   
 
 def create_pdf(filename, image_path, num_pages=1, page_size=A3, grid_spacing=20, grid_color="#cccccc", grid_line_width=0.5):
   """Creates a PDF with a square grid on each page and page numbers.
@@ -73,8 +33,8 @@ def create_pdf(filename, image_path, num_pages=1, page_size=A3, grid_spacing=20,
       grid_color (str, optional): Color of the grid lines (default is "#cccccc").
       grid_line_width (float, optional): Width of the grid lines in points (default is 0.5).
   """
-
-  c = canvas.Canvas(filename, pagesize=page_size)
+  buffer = BytesIO()
+  c = canvas.Canvas(buffer, pagesize=page_size)
 
   # Define functions to draw grid lines and page number
   def draw_horizontal_line(y):
@@ -106,14 +66,38 @@ def create_pdf(filename, image_path, num_pages=1, page_size=A3, grid_spacing=20,
       c.showPage()  # Explicitly create a new page for multi-page PDFs
 
   # Add your desired content to the PDF (optional)
+  image = ImageReader(image_path)
+  image_width, image_height = image.getSize()
+  x = 0  # adjust as needed
+  y = page_size[1] - image_height  # adjust as needed
+  c.drawImage(image, x, y, width=image_width, height=image_height)
   # ... your content code here ...
   c.save()
-  add_image_to_first_page(filename, image_path, filename, page_size=A3, max_height_px=12000)
+  pdf_data=buffer.getvalue()
+  return pdf_data
 
 def merger(images, fname="file"):
    pdfs=[]
    for image in images:
-      create_pdf(fname, image, num_pages=1, page_size=A3)
-      pdfs.append(f"{fname}")
+      file = create_pdf(fname, image, num_pages=1, page_size=A3)
+      pdfs.append(file)
+      st.text(pdfs)
+    # Create a PdfWriter object
+   merge = PdfWriter()
+   for pdf in pdfs:
+    merge.append(BytesIO(pdf))
+   
+   buffer = BytesIO()
+   
+   merge.write(buffer)
+   merge.close()
+   pdf_data = buffer.getvalue()
+   # Create a download button for the merged PDF
+   st.download_button("Download Merged PDF", data=pdf_data, file_name="merged.pdf", mime='application/pdf')
 
-st.button("Make pdf", on_click=merger(images=images))
+    
+
+
+result=st.button("Make pdf")
+if result:
+   merger(images)
