@@ -1,9 +1,10 @@
-# 📦 Streamlit App Starter Kit 
+# 📦 Math HW pdf easy maker
 ```
 ⬆️ (Replace above with your app's name)
 ```
 
-Description of the app ...
+Insert screenshots of questions and number of pages needed
+and app will make a gridded pdf
 
 ## Demo App
 
