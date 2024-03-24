@@ -64,13 +64,20 @@ def create_pdf(filename, image_path, num_pages=1, page_size=A3, grid_spacing=20,
     # Start a new page for subsequent iterations
     if page_num < num_pages:
       c.showPage()  # Explicitly create a new page for multi-page PDFs
-
-  # Add your desired content to the PDF (optional)
+  #Add image of question
   image = ImageReader(image_path)
   image_width, image_height = image.getSize()
+  aspect_ratio = image_width / image_height
+  new_height = page_size[1] / 6
+  new_width = new_height * aspect_ratio
+  if new_width > page_size[0]:
+    new_width = page_size[0]
+    new_height = new_width / aspect_ratio
+
+
   x = 0  # adjust as needed
-  y = page_size[1] - image_height  # adjust as needed
-  c.drawImage(image, x, y, width=image_width, height=image_height)
+  y = page_size[1] - new_height  # adjust as needed
+  c.drawImage(image, x, y, width=new_width, height=new_height)
   # ... your content code here ...
   c.save()
   pdf_data=buffer.getvalue()
