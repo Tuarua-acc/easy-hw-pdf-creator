@@ -1,22 +1,11 @@
 # 📦 Math HW pdf easy maker
-```
-⬆️ (Replace above with your app's name)
-```
 
-Insert screenshots of questions and number of pages needed
+Insert screenshots of questions
 and app will make a gridded pdf
 
-## Demo App
+## App
+https://easyhwpdfcreator-41fw4bhz3i2.streamlit.app/
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://ml-model-builder-template.streamlit.app/)
+## Usage
 
-## Section Heading
-
-This is filler text, please replace this with text for this section.
-
-## Further Reading
-
-This is filler text, please replace this with a explanatory text about further relevant resources for this repo
-- Resource 1
-- Resource 2
-- Resource 3
+Creates a pdf with grid and add image of question on top of each page.
